@@ -33,6 +33,14 @@ func (v *Visitor) Visit(n ast.Node) ast.Visitor {
 
 	for i, c := range sw.Body.List {
 		caseBody := c.(*ast.CaseClause).List
+		if caseBody == nil {
+			// default case
+			if v.hasAnyErrorIndent(c) {
+				// found a default case that handles an error
+				updateIndex(CaseErrNeqNil, i)
+			}
+			continue
+		}
 		for _, e := range caseBody {
 			switch a := e.(type) {
 			case *ast.BinaryExpr:
@@ -65,6 +73,47 @@ func (v *Visitor) Visit(n ast.Node) ast.Visitor {
 		})
 	}
 	return v
+}
+
+// hasAnyErrorIndent recursively searches an error typed indent in the block if any.
+func (v *Visitor) hasAnyErrorIndent(c ast.Stmt) bool {
+	if c == nil {
+		return false
+	}
+	switch a := c.(type) {
+	case *ast.BlockStmt:
+		for _, s := range a.List {
+			if v.hasAnyErrorIndent(s) {
+				return true
+			}
+		}
+	case *ast.IfStmt:
+		return v.hasAnyErrorIndent(a.Body) || v.hasAnyErrorIndent(a.Else)
+	case *ast.SwitchStmt:
+		return v.hasAnyErrorIndent(a.Body)
+	case *ast.CaseClause:
+		for _, s := range a.Body {
+			if v.hasAnyErrorIndent(s) {
+				return true
+			}
+		}
+	case *ast.AssignStmt:
+		for _, e := range a.Rhs {
+			if v.isError(e) {
+				return true
+			}
+
+		}
+	case *ast.ExprStmt:
+		return v.isError(a.X)
+	case *ast.ReturnStmt:
+		for _, e := range a.Results {
+			if v.isError(e) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (v *Visitor) getError(m map[CaseType]int) ErrorType {

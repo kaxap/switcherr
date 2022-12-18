@@ -15,6 +15,23 @@ func funcReturnsError() (int, error) {
 	return v, fmt.Errorf("")
 }
 
+// this currently fails
+func _() error {
+	_, err := funcReturnsError()
+	switch { //
+	case errors.Is(err, err1):
+		//
+	case errors.Is(err, err2) || errors.Is(err, err3):
+		//
+	case errors.Is(err, err2) || errors.Is(err, err3) || errors.Is(err, err4):
+		//
+	default:
+		// default action should count as the last case
+		return err
+	}
+	return nil
+}
+
 func _() {
 	type S struct {
 		err error
