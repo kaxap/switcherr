@@ -15,7 +15,7 @@ func funcReturnsError() (int, error) {
 	return v, fmt.Errorf("")
 }
 
-// this currently fails
+// error properly handled
 func _() error {
 	_, err := funcReturnsError()
 	switch { //
@@ -32,6 +32,29 @@ func _() error {
 	return nil
 }
 
+// error properly handled
+func _() error {
+	_, err := funcReturnsError()
+	someFunc := func(err error) error {
+		return err
+	}
+	switch { //
+	case errors.Is(err, err1):
+		//
+	case errors.Is(err, err2) || errors.Is(err, err3):
+		//
+	case errors.Is(err, err2) || errors.Is(err, err3) || errors.Is(err, err4):
+		//
+	default:
+		// default action should count as the last case
+		if err != nil {
+			return someFunc(err)
+		}
+	}
+	return nil
+}
+
+// error properly handled
 func _() {
 	type S struct {
 		err error
@@ -51,6 +74,7 @@ func _() {
 	}
 }
 
+// improper error handling
 func _() {
 	r, err := funcReturnsError()
 	switch { // want "error type check comes after err != nil"
@@ -67,6 +91,7 @@ func _() {
 	}
 }
 
+// improper error handling
 func _() {
 	r, err := funcReturnsError()
 	switch { // want "case err != nil comes after non-error case"
@@ -79,6 +104,7 @@ func _() {
 	}
 }
 
+// improper error handling
 func _() {
 	r, err := funcReturnsError()
 	switch { // want "case err != nil is missing"
@@ -99,6 +125,7 @@ func _() {
 	}
 }
 
+// improper error handling
 func _() {
 	r, err := funcReturnsError()
 	switch {
@@ -135,7 +162,7 @@ func _() {
 	}
 }
 
-// this currently fails
+// proper error handling, this currently fails
 func _() {
 	_, err := funcReturnsError()
 	switch {
@@ -153,7 +180,7 @@ func _() {
 	}
 }
 
-// this currently fails
+// proper error handling, this currently fails
 func _() error {
 	_, err := funcReturnsError()
 	switch { //
@@ -170,7 +197,7 @@ func _() error {
 	return nil
 }
 
-// this currently fails
+// proper error handling, this currently fails
 func _() error {
 	_, err := funcReturnsError()
 	switch {
@@ -200,6 +227,7 @@ func _() error {
 	return err
 }
 
+// error properly handled
 func _() error {
 	r, err := funcReturnsError()
 	switch {

@@ -23,22 +23,17 @@ var Analyzer = &analysis.Analyzer{
 func run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
 		if isGenerated(file) {
-			//log.Printf("skipping generated file %s", pass.Fset.Position(file.Pos()).Filename)
 			continue
 		}
-
-		// ast.Print(pass.Fset, file)
 		v := &Visitor{
 			fset:      pass.Fset,
 			typesInfo: pass.TypesInfo,
 		}
 		ast.Walk(v, file)
-
 		for _, e := range v.errors {
 			pass.Reportf(e.Pos, "%s", e.ErrType)
 		}
 	}
-
 	return nil, nil
 }
 
